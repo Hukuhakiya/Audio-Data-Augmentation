@@ -1,0 +1,1854 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "f982eec4",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:43:38.549932Z",
+     "iopub.status.busy": "2024-09-06T05:43:38.549376Z",
+     "iopub.status.idle": "2024-09-06T05:43:59.914667Z",
+     "shell.execute_reply": "2024-09-06T05:43:59.913080Z"
+    },
+    "papermill": {
+     "duration": 21.380525,
+     "end_time": "2024-09-06T05:43:59.917776",
+     "exception": false,
+     "start_time": "2024-09-06T05:43:38.537251",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting resampy\r\n",
+      "  Downloading resampy-0.4.3-py3-none-any.whl.metadata (3.0 kB)\r\n",
+      "Requirement already satisfied: numpy>=1.17 in /opt/conda/lib/python3.10/site-packages (from resampy) (1.26.4)\r\n",
+      "Requirement already satisfied: numba>=0.53 in /opt/conda/lib/python3.10/site-packages (from resampy) (0.58.1)\r\n",
+      "Requirement already satisfied: llvmlite<0.42,>=0.41.0dev0 in /opt/conda/lib/python3.10/site-packages (from numba>=0.53->resampy) (0.41.1)\r\n",
+      "Downloading resampy-0.4.3-py3-none-any.whl (3.1 MB)\r\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m3.1/3.1 MB\u001b[0m \u001b[31m33.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\r\n",
+      "\u001b[?25hInstalling collected packages: resampy\r\n",
+      "Successfully installed resampy-0.4.3\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Basic Libraries\n",
+    "# import torch\n",
+    "# import torchaudio\n",
+    "# import torchaudio.functional as torchAudFunc\n",
+    "\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import random\n",
+    "import time\n",
+    "\n",
+    "pd.plotting.register_matplotlib_converters()\n",
+    "import matplotlib.pyplot as plt\n",
+    "%matplotlib inline\n",
+    "import seaborn as sns\n",
+    "import random\n",
+    "\n",
+    "from IPython.display import Audio\n",
+    "\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.metrics import classification_report\n",
+    "from sklearn.model_selection import GridSearchCV\n",
+    "\n",
+    "from sklearn.preprocessing import MinMaxScaler\n",
+    "!pip install resampy \n",
+    "# /kaggle/input/setup-halil/resampy-0.4.3-py3-none-any.whl\n",
+    "# the problem for the resampy error was the internet being off"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "a105add7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:43:59.941294Z",
+     "iopub.status.busy": "2024-09-06T05:43:59.940264Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.529153Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.527706Z"
+    },
+    "papermill": {
+     "duration": 17.604391,
+     "end_time": "2024-09-06T05:44:17.532254",
+     "exception": false,
+     "start_time": "2024-09-06T05:43:59.927863",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[]\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Libraries for Classification and building Models\n",
+    "# the problems have been solved since they were deemed warnings and not errors; other ones were resolved as the internet has been activated for the server\n",
+    "# !pip install wurlitzer\n",
+    "# !pip install tensorflow-text==2.17.0\n",
+    "# !pip install tensorflow-decision-forests==1.9.2\n",
+    "# !pip install tensorflow[and-cuda]\n",
+    "from tensorflow.keras.models import Sequential\n",
+    "from tensorflow.keras.layers import Conv2D, Flatten, Dense, MaxPool2D, Dropout\n",
+    "from tensorflow.keras.utils import to_categorical \n",
+    "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))\n",
+    "\n",
+    "from sklearn.ensemble import RandomForestClassifier\n",
+    "from sklearn.svm import SVC"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "1f2ce2c7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.555958Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.554895Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.695867Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.694468Z"
+    },
+    "papermill": {
+     "duration": 0.156214,
+     "end_time": "2024-09-06T05:44:17.698902",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.542688",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Project Specific Libraries\n",
+    "import os\n",
+    "import librosa\n",
+    "import librosa.display\n",
+    "import glob \n",
+    "import skimage"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "95118ea4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.722508Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.721022Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.732286Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.730863Z"
+    },
+    "papermill": {
+     "duration": 0.026478,
+     "end_time": "2024-09-06T05:44:17.735363",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.708885",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# def arrange_duration(data, sample_rate, duration, decimal = True):\n",
+    "#     if duration <= 0:\n",
+    "#         return data\n",
+    "    \n",
+    "#     data_duration = librosa.get_duration(y = data, sr = sample_rate)\n",
+    "#     duration_ratio = duration / data_duration\n",
+    "    \n",
+    "#     new_data = []\n",
+    "#     for i in range(int(duration_ratio)):\n",
+    "#         new_data = np.append(new_data, data)\n",
+    "        \n",
+    "#     if decimal:\n",
+    "#         decimal_duration = int(len(data) * (duration_ratio % 1))\n",
+    "#         new_data = np.append(new_data, data[:decimal_duration])\n",
+    "\n",
+    "#     return new_data\n",
+    "\n",
+    "# def squared_norm(vector):\n",
+    "#     return np.sum(np.square(vector))\n",
+    "\n",
+    "# def add_noise(data, snr_dbs, noise_factor):\n",
+    "#     #uses pytorch function for first view, noise_factor used as the flag\n",
+    "#     noise = np.random.randn(len(data))\n",
+    "#     sq_norm_noise, sq_norm_data = squared_norm(noise), squared_norm(data)\n",
+    "#     noisy_data = np.sqrt((sq_norm_data/sq_norm_noise)*(10**(-snr_dbs/10)))*noise_factor*noise + data\n",
+    "#     return noisy_data\n",
+    "\n",
+    "# def shift_sound(data, shift_factor):\n",
+    "#     #shifts the sound, shift_factor=0 gives no change\n",
+    "#     shift_factor = np.random.randint(0, shift_factor * len(data) + 1)\n",
+    "#     rolled_data = np.roll(data, shift_factor)\n",
+    "#     return rolled_data\n",
+    "\n",
+    "# def shift_sound_add(data, shift_factor):\n",
+    "#     shift_factor = np.random.randint(0, shift_factor * len(data) + 1)\n",
+    "#     rolled_data = np.roll(data, shift_factor)\n",
+    "#     rolled_data = rolled_data + data\n",
+    "#     return rolled_data\n",
+    "\n",
+    "# def change_pitch(data, sample_rate, pitch_factor):\n",
+    "#     #changes the pitch, pitch_factor=0 gives no change\n",
+    "#     changed_pitch_data = librosa.effects.pitch_shift(data, sr = sample_rate, n_steps = pitch_factor)\n",
+    "#     return changed_pitch_data\n",
+    "\n",
+    "\n",
+    "# def change_speed(data, speed_rate):\n",
+    "#     #stretches the sound, speed_rate=1 gives no change\n",
+    "#     stretched_data = librosa.effects.time_stretch(data, rate = speed_rate)\n",
+    "#     return stretched_data\n",
+    "\n",
+    "\n",
+    "\n",
+    "# # def change_speed(data, speed_rate):\n",
+    "# #     #stretches the sound, speed_rate=1 gives no changs\n",
+    "# #     stretched_data = librosa.effects.time_stretch(data, rate = speed_rate)\n",
+    "# #     stretched_data_length = len(stretched_data) \n",
+    "    \n",
+    "# #     #arrangement for the minimal fft count\n",
+    "# #     if stretched_data_length < 2048 and speed_rate!=1:\n",
+    "# #         # Padding with the start of the original data to reach 2048 samples\n",
+    "# #         stretched_data = np.pad(stretched_data, (0, 2048 - stretched_data_length), mode='wrap')\n",
+    "        \n",
+    "# #     return stretched_data\n",
+    "    \n",
+    "\n",
+    "# def rand_cancel(data, crop_factor):\n",
+    "#     data_length = len(data)\n",
+    "#     lower_bound = np.random.randint(0, data_length)\n",
+    "#     upper_bound = min(lower_bound + round(crop_factor * data_length), data_length)  # Ensure it doesn't exceed bounds\n",
+    "#     rand_num = random.random() # Randomization to prevent pattern recog.\n",
+    "    \n",
+    "#     # mark the \n",
+    "    \n",
+    "#     if 0.1 <= rand_num <= 0.95:\n",
+    "#         data[lower_bound:upper_bound] = 0\n",
+    "    \n",
+    "#     # No need to reshape since we're not changing the shape\n",
+    "#     return data\n",
+    "\n",
+    "\n",
+    "# def main_effect(data, sample_rate, added_shift_factor = 0, crop_factor=0, noise_factor = 0, snr_dbs = 1, shift_factor = 0, pitch_factor = 0, speed_rate = 1, duration = 0, decimal = True):\n",
+    "#     final_data = arrange_duration(\n",
+    "#         change_speed(change_pitch(\n",
+    "#             shift_sound(add_noise(\n",
+    "#                 rand_cancel(\n",
+    "#                     shift_sound_add(data, added_shift_factor), crop_factor), snr_dbs, noise_factor), shift_factor), sample_rate, pitch_factor), speed_rate), sample_rate, duration, decimal)\n",
+    "#     return final_data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "db0d2d64",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.757842Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.757344Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.782827Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.781383Z"
+    },
+    "papermill": {
+     "duration": 0.040569,
+     "end_time": "2024-09-06T05:44:17.786093",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.745524",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def arrange_duration(data, sample_rate, duration, decimal = True):\n",
+    "    \"\"\"\n",
+    "    the function allows the manual sampling and duration specification\n",
+    "    also returns the original data for further preprocessing\n",
+    "    \"\"\"\n",
+    "    if duration <= 0:\n",
+    "        return data\n",
+    "    \n",
+    "    data_duration = librosa.get_duration(y = data, sr = sample_rate)\n",
+    "    duration_ratio = duration / data_duration\n",
+    "    \n",
+    "    new_data = []\n",
+    "    for i in range(int(duration_ratio)):\n",
+    "        new_data = np.append(new_data, data)\n",
+    "        \n",
+    "    if decimal:\n",
+    "        decimal_duration = int(len(data) * (duration_ratio % 1))\n",
+    "        new_data = np.append(new_data, data[:decimal_duration])\n",
+    "\n",
+    "    return new_data\n",
+    "\n",
+    "def squared_norm(vector):\n",
+    "    \"\"\"\n",
+    "    used for SNR integration into the noise function\n",
+    "    \"\"\"\n",
+    "    return np.sum(np.square(vector))\n",
+    "\n",
+    "def add_noise(data, snr_dbs, noise_factor):\n",
+    "    \"\"\"\n",
+    "    white noise addition through the formulation in reference to https://pytorch.org/audio/main/generated/torchaudio.functional.add_noise.html\n",
+    "    \"\"\"\n",
+    "    noise = np.random.randn(len(data))\n",
+    "    sq_norm_noise, sq_norm_data = squared_norm(noise), squared_norm(data)\n",
+    "    noisy_data = np.sqrt((sq_norm_data/sq_norm_noise)*(10**(-snr_dbs/10)))*noise_factor*noise + data\n",
+    "    return noisy_data\n",
+    "\n",
+    "def shift_sound(data, shift_factor):\n",
+    "    \"\"\"\n",
+    "    shifts the audio waveform in time domain\n",
+    "    shift is randomized as per the shift_factor provided in [0,1]\n",
+    "    \"\"\"\n",
+    "    shift_factor = np.random.randint(0, shift_factor * len(data) + 1)\n",
+    "    rolled_data = np.roll(data, shift_factor)\n",
+    "    return rolled_data\n",
+    "\n",
+    "def shift_sound_add(data, shift_factor):\n",
+    "    \"\"\"\n",
+    "    adds the shifted sound onto the original audio\n",
+    "    creates a reflection like effect\n",
+    "    \"\"\"\n",
+    "    if shift_factor != 0:\n",
+    "        shift_factor = np.random.randint(0, shift_factor * len(data) + 1)\n",
+    "        rolled_data = np.roll(data, shift_factor)\n",
+    "        rolled_data = rolled_data + data\n",
+    "        return rolled_data\n",
+    "    else:\n",
+    "        return data\n",
+    "\n",
+    "def change_pitch(data, sample_rate, pitch_factor):\n",
+    "    \"\"\"\n",
+    "    direct pitch change using librosa.effects library\n",
+    "    \"\"\"\n",
+    "    if pitch_factor != 0:\n",
+    "        changed_pitch_data = librosa.effects.pitch_shift(data, sr = sample_rate, n_steps = pitch_factor)\n",
+    "        return changed_pitch_data\n",
+    "    else:\n",
+    "        return data\n",
+    "\n",
+    "\n",
+    "def change_speed(data, speed_rate):\n",
+    "    \"\"\"\n",
+    "    time stretchs through librosa.effects library, changes the processing speed rate\n",
+    "    \"\"\"\n",
+    "    if speed_rate !=1:\n",
+    "        stretched_data = librosa.effects.time_stretch(data, rate = speed_rate)\n",
+    "        return stretched_data\n",
+    "    else:\n",
+    "        return data\n",
+    "\n",
+    "\n",
+    "def rand_cancel(data, crop_factor):\n",
+    "    \"\"\"\n",
+    "    makes some portion of the audio, either in mel-frequency or time domain vanish\n",
+    "    in small portions, it is found effective augmenting the dataset\n",
+    "    for a more developed version refer to doi: 10.21437/Interspeech.2019-2680\n",
+    "    \"\"\"\n",
+    "    if crop_factor != 0:\n",
+    "        data_length = len(data)\n",
+    "        lower_bound = np.random.randint(0, data_length)\n",
+    "        upper_bound = min(lower_bound + round(crop_factor * data_length), data_length)  # Ensure it doesn't exceed bounds\n",
+    "        rand_num = random.random() # Randomization to prevent pattern recog.\n",
+    "\n",
+    "        # randomization as per the different volumes\n",
+    "        if 0.1 <= rand_num <= 0.95:\n",
+    "            data[lower_bound:upper_bound] = 0\n",
+    "\n",
+    "        return data\n",
+    "    else:\n",
+    "        return data\n",
+    "\n",
+    "\n",
+    "def main_effect(data, sample_rate, added_shift_factor = 0, crop_factor=0, noise_factor = 0, snr_dbs = 1, shift_factor = 0, pitch_factor = 0, speed_rate = 1, duration = 0, decimal = True):\n",
+    "    \"\"\"\n",
+    "    merges all the effect functions to give the complete form of the preprocessed audio data\n",
+    "    \"\"\"\n",
+    "    final_data = arrange_duration(\n",
+    "        change_speed(change_pitch(\n",
+    "            shift_sound(add_noise(\n",
+    "                rand_cancel(\n",
+    "                    shift_sound_add(data, added_shift_factor), crop_factor), snr_dbs, noise_factor), shift_factor), sample_rate, pitch_factor), speed_rate), sample_rate, duration, decimal)\n",
+    "    return final_data\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "2d883959",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.810124Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.808879Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.823163Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.822039Z"
+    },
+    "papermill": {
+     "duration": 0.029287,
+     "end_time": "2024-09-06T05:44:17.825889",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.796602",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# testing for the augmentation corruption levels through audio listenings, going to have this through the addition of noise\n",
+    "# call the function to observe the augmented version and to display the mel spectogram, let's try to observe this on different groups of audio and\n",
+    "# different types*** of augmentation methods to determine a level to prevent possible corruption, an average low level reliable model\n",
+    "# change for possible referencing positions\n",
+    "\n",
+    "def audio_inspector(data_path, aug=0):\n",
+    "    # aug = [crop_factor, noise_factor, snr_dbs, shift_factor, pitch_factor, speed_rate]\n",
+    "    \"\"\"\n",
+    "    inspects the audio and the linear-spectogram of the audio\n",
+    "    before and after the augmentation to observe the possible corruption\n",
+    "    \"\"\"\n",
+    "    #data_path format -- 'foldX/111111-1-1-1.wav' == 'foldX/xxxxxx-x-x-x.wav'\n",
+    "    data_path = '../input/urbansound8k/' + data_path\n",
+    "    audio, sample_rate = librosa.load(data_path)\n",
+    "\n",
+    "    # visualization for the clear audio\n",
+    "    plt.figure(figsize=(25, 15))\n",
+    "    audio_spec_noaug = librosa.amplitude_to_db(librosa.stft(audio), np.max)\n",
+    "    plt.subplot(4,2,1)\n",
+    "    librosa.display.specshow(audio_spec_noaug, y_axis='linear')\n",
+    "    plt.colorbar(format='%+2.0f dB')\n",
+    "    plt.title('Linear-freq Power Spectogram for the Data /wo Aug')\n",
+    "\n",
+    "    display(Audio(data=audio, rate=sample_rate))\n",
+    "\n",
+    "    # augmented version\n",
+    "    # aug = [crop_factor, noise_factor, snr_dbs, shift_factor, pitch_factor, speed_rate]\n",
+    "    audio_aug = main_effect(audio, sample_rate, crop_factor=aug[0], noise_factor = aug[1], \n",
+    "            snr_dbs = aug[2], shift_factor = aug[3], pitch_factor = aug[4], \n",
+    "            speed_rate = aug[5], duration = 0, decimal = True)\n",
+    "\n",
+    "    # visualization for the augmented data\n",
+    "    plt.figure(figsize=(25, 15))\n",
+    "    audio_spec_aug = librosa.amplitude_to_db(librosa.stft(audio_aug), np.max)\n",
+    "    plt.subplot(4,2,1)\n",
+    "    librosa.display.specshow(audio_spec_aug, y_axis='linear')\n",
+    "    plt.colorbar(format='%+2.0f dB')\n",
+    "    plt.title('Linear-freq Power Spectogram for the Data /w Aug')\n",
+    "\n",
+    "    display(Audio(data=audio_aug, rate=sample_rate))\n",
+    "    \n",
+    "def plot_waveform(data, sample_rate):\n",
+    "    plt.figure(figsize=(14, 5))\n",
+    "    librosa.display.waveplot(data, sr=sample_rate, alpha=0.7)\n",
+    "    plt.title('Audio Waveform')\n",
+    "    plt.xlabel('Time (s)')\n",
+    "    plt.ylabel('Amplitude')\n",
+    "    plt.grid(True)\n",
+    "    plt.tight_layout()\n",
+    "    plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "8c641899",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.849286Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.848797Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.856683Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.854511Z"
+    },
+    "papermill": {
+     "duration": 0.023753,
+     "end_time": "2024-09-06T05:44:17.860421",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.836668",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# def parser(row, added_shift_factor = 0, crop_factor = 0, noise_factor = 0, snr_dbs = 1, shift_factor = 0, pitch_factor = 0, speed_rate = 1, duration = 0, decimal = True, aug = False, mut = False):\n",
+    "#     # Function to load files and extract features\n",
+    "#     feature = []\n",
+    "#     label = []\n",
+    "#     start_time = time.time()\n",
+    "#     for i in range(len(row)):\n",
+    "#         file_name = '../input/urbansound8k/fold' + str(row[\"fold\"][i]) + '/' + row[\"slice_file_name\"][i]\n",
+    "#         X, sample_rate = librosa.load(file_name, res_type='kaiser_fast')\n",
+    "        \n",
+    "#         # data augmentation through the input factors\n",
+    "#         X_aug = main_effect(X, sample_rate=sample_rate, added_shift_factor=added_shift_factor, snr_dbs=snr_dbs, crop_factor=0, noise_factor=noise_factor, shift_factor=shift_factor, pitch_factor=pitch_factor, speed_rate=speed_rate, duration=duration, decimal=aug)\n",
+    "        \n",
+    "#         # possible extension of the dataset for further training\n",
+    "#         X = X + X_aug if mut else X_aug\n",
+    "        \n",
+    "#         # We extract mfcc feature from data\n",
+    "#         mels = np.mean(rand_cancel(data = librosa.feature.melspectrogram(y=X, sr=sample_rate), crop_factor=crop_factor).T,axis=0)\n",
+    "# #         mels = np.mean(librosa.feature.melspectrogram(y=X, sr=sample_rate).T, axis=0)\n",
+    "#         feature.append(mels)\n",
+    "#         label.append(row[\"classID\"][i])\n",
+    "#     end_time = time.time()\n",
+    "    \n",
+    "#     return feature, label, start_time, end_time"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "f90be3f3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.884140Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.882927Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.894710Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.893376Z"
+    },
+    "papermill": {
+     "duration": 0.026269,
+     "end_time": "2024-09-06T05:44:17.897379",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.871110",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def parser(row, added_shift_factor = 0, crop_factor = 0, noise_factor = 0, snr_dbs = 1, shift_factor = 0, pitch_factor = 0, speed_rate = 1, duration = 0, decimal = True, aug = False):\n",
+    "    \"\"\"\n",
+    "    takes the cluster data and processes each audio piece one by one\n",
+    "    if aug, augments the dataset as well\n",
+    "    takes the mfcc, mel-frequency cepstrum, using STFT and mel-spectrogram transformation\n",
+    "    creates mfcc dataset, through the means\n",
+    "    \"\"\"\n",
+    "    feature = []\n",
+    "    label = []\n",
+    "    start_time = time.time()\n",
+    "    \n",
+    "    for i in range(len(row)):\n",
+    "        file_name = '../input/urbansound8k/fold' + str(row[\"fold\"][i]) + '/' + row[\"slice_file_name\"][i]\n",
+    "        X, sample_rate = librosa.load(file_name, res_type='kaiser_fast')\n",
+    "        \n",
+    "        # augment the data\n",
+    "        if aug:\n",
+    "            X = main_effect(X, sample_rate=sample_rate, added_shift_factor=added_shift_factor, snr_dbs=snr_dbs, crop_factor=0, noise_factor=noise_factor, shift_factor=shift_factor, pitch_factor=pitch_factor, speed_rate=speed_rate, duration=duration, decimal=aug)\n",
+    "            \n",
+    "        # extract mfcc feature from data\n",
+    "        # data crop in mel-frequency domain,rand_cancel()\n",
+    "        mels = np.mean(rand_cancel(data = librosa.feature.melspectrogram(y=X, sr=sample_rate), crop_factor=crop_factor).T,axis=0)        \n",
+    "        feature.append(mels)\n",
+    "        label.append(row[\"classID\"][i])\n",
+    "        \n",
+    "    end_time = time.time()\n",
+    "    \n",
+    "    return feature, label, start_time, end_time"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "74f12a07",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.921040Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.919827Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.927872Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.926674Z"
+    },
+    "papermill": {
+     "duration": 0.022652,
+     "end_time": "2024-09-06T05:44:17.930456",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.907804",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def prepare_data(feature, label):\n",
+    "    X = np.array(feature)\n",
+    "    Y = np.array(label)\n",
+    "#     data = temp.transpose()\n",
+    "    \n",
+    "#     X_ = data[:, 0]\n",
+    "#     Y = data[:, 1]\n",
+    "#     X = np.empty([8732, 128])\n",
+    "    \n",
+    "#     for i in range(8732):\n",
+    "#         X[i] = (X_[i])\n",
+    "    \n",
+    "    Y = to_categorical(Y)\n",
+    "    \n",
+    "    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1)\n",
+    "    \n",
+    "    X_train = X_train.reshape(-1, 16, 8, 1)\n",
+    "    X_test = X_test.reshape(-1, 16, 8, 1)\n",
+    "    \n",
+    "    return X_train, X_test, Y_train, Y_test"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "5a7ba5a7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.952768Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.952323Z",
+     "iopub.status.idle": "2024-09-06T05:44:17.966787Z",
+     "shell.execute_reply": "2024-09-06T05:44:17.965295Z"
+    },
+    "papermill": {
+     "duration": 0.029745,
+     "end_time": "2024-09-06T05:44:17.970098",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.940353",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def train_model(train = False, model_name = \"Original_Model\", X_test = 0, X_train = 0, Y_test = 0, Y_train = 0, epochs = 90, batch_size = 30):\n",
+    "    if train:\n",
+    "        start_time = time.time()\n",
+    "        model = Sequential()\n",
+    "\n",
+    "        model.add(Conv2D(64, (3, 3), padding = \"same\", activation = \"tanh\", input_shape = (16, 8, 1)))\n",
+    "        model.add(MaxPool2D(pool_size=(2, 2)))\n",
+    "        model.add(Conv2D(128, (3, 3), padding = \"same\", activation = \"tanh\"))\n",
+    "        model.add(MaxPool2D(pool_size=(2, 2)))\n",
+    "        model.add(Dropout(0.1))\n",
+    "        model.add(Flatten())\n",
+    "        model.add(Dense(1024, activation = \"tanh\"))\n",
+    "        model.add(Dense(10, activation = \"softmax\"))\n",
+    "\n",
+    "        model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])\n",
+    "        print(epochs)\n",
+    "        model.fit(x=X_train, y=Y_train, batch_size=batch_size, epochs=90, validation_data=(X_test, Y_test))\n",
+    "        \n",
+    "        model.save(model_name+'.keras')\n",
+    "        \n",
+    "        end_time = time.time()\n",
+    "        training_time = (end_time-start_time)/60\n",
+    "        \n",
+    "        return model, training_time\n",
+    "        \n",
+    "    else:\n",
+    "        loaded_model = tf.keras.models.load_model(model_name)\n",
+    "        return loaded_model\n",
+    "#     when saved will return the previous model, for the train_model is called with train=False argument later on"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "ff29604b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:17.994493Z",
+     "iopub.status.busy": "2024-09-06T05:44:17.993457Z",
+     "iopub.status.idle": "2024-09-06T05:44:18.001914Z",
+     "shell.execute_reply": "2024-09-06T05:44:18.000108Z"
+    },
+    "papermill": {
+     "duration": 0.024889,
+     "end_time": "2024-09-06T05:44:18.005835",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:17.980946",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def train_test_accuracy(model, X_train, X_test, Y_train, Y_test):\n",
+    "    start_time = time.time()\n",
+    "    \n",
+    "    predictions = model.predict(X_test)\n",
+    "    score_test = model.evaluate(X_test, Y_test)\n",
+    "    \n",
+    "    predictions = model.predict(X_train)\n",
+    "    score_train = model.evaluate(X_train, Y_train)\n",
+    "    \n",
+    "    test_result = score_test[1]\n",
+    "    train_result = score_train[1]\n",
+    "    \n",
+    "    end_time = time.time()\n",
+    "    eval_time = (end_time-start_time)/60\n",
+    "    \n",
+    "    return train_result, test_result, eval_time"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "3455484f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T05:44:18.027933Z",
+     "iopub.status.busy": "2024-09-06T05:44:18.027501Z",
+     "iopub.status.idle": "2024-09-06T06:14:00.860058Z",
+     "shell.execute_reply": "2024-09-06T06:14:00.858121Z"
+    },
+    "papermill": {
+     "duration": 1782.847342,
+     "end_time": "2024-09-06T06:14:00.863301",
+     "exception": false,
+     "start_time": "2024-09-06T05:44:18.015959",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1323\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1103\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1523\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/keras/src/layers/convolutional/base_conv.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.\n",
+      "  super().__init__(activity_regularizer=activity_regularizer, **kwargs)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "90\n",
+      "Epoch 1/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m8s\u001b[0m 28ms/step - accuracy: 0.3991 - loss: 1.7504 - val_accuracy: 0.5657 - val_loss: 1.2731\n",
+      "Epoch 2/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m7s\u001b[0m 31ms/step - accuracy: 0.6131 - loss: 1.1338 - val_accuracy: 0.6193 - val_loss: 1.1250\n",
+      "Epoch 3/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.6677 - loss: 0.9889 - val_accuracy: 0.6880 - val_loss: 0.9394\n",
+      "Epoch 4/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 26ms/step - accuracy: 0.7259 - loss: 0.8246 - val_accuracy: 0.6844 - val_loss: 0.9759\n",
+      "Epoch 5/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 25ms/step - accuracy: 0.7405 - loss: 0.7700 - val_accuracy: 0.7091 - val_loss: 0.9200\n",
+      "Epoch 6/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.7762 - loss: 0.6660 - val_accuracy: 0.7274 - val_loss: 0.9032\n",
+      "Epoch 7/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.8000 - loss: 0.6115 - val_accuracy: 0.7513 - val_loss: 0.7943\n",
+      "Epoch 8/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.8232 - loss: 0.5204 - val_accuracy: 0.7760 - val_loss: 0.7880\n",
+      "Epoch 9/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.8302 - loss: 0.5181 - val_accuracy: 0.7384 - val_loss: 0.9507\n",
+      "Epoch 10/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.8382 - loss: 0.4924 - val_accuracy: 0.7687 - val_loss: 0.7916\n",
+      "Epoch 11/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 29ms/step - accuracy: 0.8628 - loss: 0.4376 - val_accuracy: 0.7842 - val_loss: 0.7477\n",
+      "Epoch 12/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.8621 - loss: 0.4191 - val_accuracy: 0.7503 - val_loss: 0.9071\n",
+      "Epoch 13/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.8726 - loss: 0.4012 - val_accuracy: 0.8053 - val_loss: 0.7253\n",
+      "Epoch 14/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.8806 - loss: 0.3529 - val_accuracy: 0.7998 - val_loss: 0.7615\n",
+      "Epoch 15/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9054 - loss: 0.2830 - val_accuracy: 0.7989 - val_loss: 0.7588\n",
+      "Epoch 16/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.8993 - loss: 0.3178 - val_accuracy: 0.8218 - val_loss: 0.6720\n",
+      "Epoch 17/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 27ms/step - accuracy: 0.9043 - loss: 0.2929 - val_accuracy: 0.8117 - val_loss: 0.7199\n",
+      "Epoch 18/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9033 - loss: 0.2843 - val_accuracy: 0.8090 - val_loss: 0.7146\n",
+      "Epoch 19/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9113 - loss: 0.2699 - val_accuracy: 0.8301 - val_loss: 0.6777\n",
+      "Epoch 20/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9233 - loss: 0.2468 - val_accuracy: 0.8136 - val_loss: 0.7720\n",
+      "Epoch 21/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9070 - loss: 0.2621 - val_accuracy: 0.8200 - val_loss: 0.7494\n",
+      "Epoch 22/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 26ms/step - accuracy: 0.9180 - loss: 0.2400 - val_accuracy: 0.8218 - val_loss: 0.7460\n",
+      "Epoch 23/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9211 - loss: 0.2368 - val_accuracy: 0.8278 - val_loss: 0.7048\n",
+      "Epoch 24/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 26ms/step - accuracy: 0.9358 - loss: 0.1924 - val_accuracy: 0.8342 - val_loss: 0.6890\n",
+      "Epoch 25/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9397 - loss: 0.1833 - val_accuracy: 0.8282 - val_loss: 0.7531\n",
+      "Epoch 26/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9345 - loss: 0.2041 - val_accuracy: 0.8310 - val_loss: 0.7554\n",
+      "Epoch 27/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9328 - loss: 0.2026 - val_accuracy: 0.8388 - val_loss: 0.7706\n",
+      "Epoch 28/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9326 - loss: 0.1995 - val_accuracy: 0.8351 - val_loss: 0.7212\n",
+      "Epoch 29/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9433 - loss: 0.1706 - val_accuracy: 0.8246 - val_loss: 0.7517\n",
+      "Epoch 30/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9391 - loss: 0.1762 - val_accuracy: 0.8278 - val_loss: 0.7797\n",
+      "Epoch 31/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9440 - loss: 0.1691 - val_accuracy: 0.8447 - val_loss: 0.6877\n",
+      "Epoch 32/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 25ms/step - accuracy: 0.9506 - loss: 0.1603 - val_accuracy: 0.8607 - val_loss: 0.7015\n",
+      "Epoch 33/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9573 - loss: 0.1303 - val_accuracy: 0.8470 - val_loss: 0.6956\n",
+      "Epoch 34/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9586 - loss: 0.1267 - val_accuracy: 0.8438 - val_loss: 0.7161\n",
+      "Epoch 35/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9540 - loss: 0.1287 - val_accuracy: 0.8475 - val_loss: 0.7389\n",
+      "Epoch 36/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9585 - loss: 0.1244 - val_accuracy: 0.8383 - val_loss: 0.7398\n",
+      "Epoch 37/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9530 - loss: 0.1370 - val_accuracy: 0.8594 - val_loss: 0.7277\n",
+      "Epoch 38/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9628 - loss: 0.1073 - val_accuracy: 0.8484 - val_loss: 0.7308\n",
+      "Epoch 39/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9633 - loss: 0.1119 - val_accuracy: 0.8406 - val_loss: 0.8004\n",
+      "Epoch 40/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9583 - loss: 0.1200 - val_accuracy: 0.8525 - val_loss: 0.7114\n",
+      "Epoch 41/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9535 - loss: 0.1379 - val_accuracy: 0.8484 - val_loss: 0.7904\n",
+      "Epoch 42/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9664 - loss: 0.1037 - val_accuracy: 0.8552 - val_loss: 0.7388\n",
+      "Epoch 43/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 27ms/step - accuracy: 0.9652 - loss: 0.1006 - val_accuracy: 0.8475 - val_loss: 0.8262\n",
+      "Epoch 44/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9713 - loss: 0.0966 - val_accuracy: 0.8497 - val_loss: 0.8251\n",
+      "Epoch 45/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9679 - loss: 0.0931 - val_accuracy: 0.8369 - val_loss: 0.8310\n",
+      "Epoch 46/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9640 - loss: 0.1025 - val_accuracy: 0.8530 - val_loss: 0.7436\n",
+      "Epoch 47/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 29ms/step - accuracy: 0.9685 - loss: 0.0861 - val_accuracy: 0.8511 - val_loss: 0.6994\n",
+      "Epoch 48/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9716 - loss: 0.0803 - val_accuracy: 0.8525 - val_loss: 0.7384\n",
+      "Epoch 49/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9619 - loss: 0.1115 - val_accuracy: 0.8552 - val_loss: 0.7698\n",
+      "Epoch 50/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9741 - loss: 0.0822 - val_accuracy: 0.8607 - val_loss: 0.7487\n",
+      "Epoch 51/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9709 - loss: 0.0803 - val_accuracy: 0.8534 - val_loss: 0.7835\n",
+      "Epoch 52/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 29ms/step - accuracy: 0.9701 - loss: 0.0843 - val_accuracy: 0.8639 - val_loss: 0.7538\n",
+      "Epoch 53/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9738 - loss: 0.0824 - val_accuracy: 0.8681 - val_loss: 0.7350\n",
+      "Epoch 54/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9757 - loss: 0.0691 - val_accuracy: 0.8672 - val_loss: 0.7212\n",
+      "Epoch 55/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9791 - loss: 0.0590 - val_accuracy: 0.8617 - val_loss: 0.7728\n",
+      "Epoch 56/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9762 - loss: 0.0723 - val_accuracy: 0.8585 - val_loss: 0.8134\n",
+      "Epoch 57/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9660 - loss: 0.1071 - val_accuracy: 0.8525 - val_loss: 0.8232\n",
+      "Epoch 58/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9763 - loss: 0.0784 - val_accuracy: 0.8585 - val_loss: 0.8159\n",
+      "Epoch 59/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9761 - loss: 0.0712 - val_accuracy: 0.8722 - val_loss: 0.7359\n",
+      "Epoch 60/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9827 - loss: 0.0545 - val_accuracy: 0.8539 - val_loss: 0.8005\n",
+      "Epoch 61/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9763 - loss: 0.0713 - val_accuracy: 0.8649 - val_loss: 0.7477\n",
+      "Epoch 62/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9790 - loss: 0.0561 - val_accuracy: 0.8621 - val_loss: 0.7805\n",
+      "Epoch 63/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 29ms/step - accuracy: 0.9792 - loss: 0.0577 - val_accuracy: 0.8607 - val_loss: 0.7844\n",
+      "Epoch 64/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m7s\u001b[0m 30ms/step - accuracy: 0.9760 - loss: 0.0733 - val_accuracy: 0.8566 - val_loss: 0.8361\n",
+      "Epoch 65/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m7s\u001b[0m 33ms/step - accuracy: 0.9749 - loss: 0.0831 - val_accuracy: 0.8621 - val_loss: 0.8679\n",
+      "Epoch 66/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m8s\u001b[0m 35ms/step - accuracy: 0.9727 - loss: 0.0908 - val_accuracy: 0.8635 - val_loss: 0.8303\n",
+      "Epoch 67/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m9s\u001b[0m 39ms/step - accuracy: 0.9711 - loss: 0.0773 - val_accuracy: 0.8621 - val_loss: 0.8028\n",
+      "Epoch 68/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 28ms/step - accuracy: 0.9780 - loss: 0.0639 - val_accuracy: 0.8676 - val_loss: 0.8111\n",
+      "Epoch 69/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9773 - loss: 0.0664 - val_accuracy: 0.8713 - val_loss: 0.8207\n",
+      "Epoch 70/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 27ms/step - accuracy: 0.9812 - loss: 0.0556 - val_accuracy: 0.8763 - val_loss: 0.8118\n",
+      "Epoch 71/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9843 - loss: 0.0478 - val_accuracy: 0.8649 - val_loss: 0.8275\n",
+      "Epoch 72/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 27ms/step - accuracy: 0.9820 - loss: 0.0545 - val_accuracy: 0.8617 - val_loss: 0.8803\n",
+      "Epoch 73/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9825 - loss: 0.0505 - val_accuracy: 0.8649 - val_loss: 0.8996\n",
+      "Epoch 74/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9846 - loss: 0.0483 - val_accuracy: 0.8585 - val_loss: 0.8933\n",
+      "Epoch 75/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 27ms/step - accuracy: 0.9803 - loss: 0.0664 - val_accuracy: 0.8722 - val_loss: 0.7651\n",
+      "Epoch 76/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m11s\u001b[0m 28ms/step - accuracy: 0.9835 - loss: 0.0478 - val_accuracy: 0.8736 - val_loss: 0.7894\n",
+      "Epoch 77/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9820 - loss: 0.0604 - val_accuracy: 0.8575 - val_loss: 0.8634\n",
+      "Epoch 78/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9796 - loss: 0.0570 - val_accuracy: 0.8759 - val_loss: 0.7832\n",
+      "Epoch 79/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9835 - loss: 0.0520 - val_accuracy: 0.8612 - val_loss: 0.8480\n",
+      "Epoch 80/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9844 - loss: 0.0471 - val_accuracy: 0.8777 - val_loss: 0.7870\n",
+      "Epoch 81/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 29ms/step - accuracy: 0.9855 - loss: 0.0447 - val_accuracy: 0.8736 - val_loss: 0.8022\n",
+      "Epoch 82/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m10s\u001b[0m 27ms/step - accuracy: 0.9839 - loss: 0.0531 - val_accuracy: 0.8717 - val_loss: 0.8007\n",
+      "Epoch 83/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9820 - loss: 0.0541 - val_accuracy: 0.8690 - val_loss: 0.8212\n",
+      "Epoch 84/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 27ms/step - accuracy: 0.9847 - loss: 0.0453 - val_accuracy: 0.8649 - val_loss: 0.8673\n",
+      "Epoch 85/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 29ms/step - accuracy: 0.9802 - loss: 0.0601 - val_accuracy: 0.8768 - val_loss: 0.7684\n",
+      "Epoch 86/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9836 - loss: 0.0456 - val_accuracy: 0.8676 - val_loss: 0.8634\n",
+      "Epoch 87/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9838 - loss: 0.0441 - val_accuracy: 0.8676 - val_loss: 0.8253\n",
+      "Epoch 88/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9818 - loss: 0.0572 - val_accuracy: 0.8740 - val_loss: 0.8419\n",
+      "Epoch 89/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 26ms/step - accuracy: 0.9795 - loss: 0.0631 - val_accuracy: 0.8727 - val_loss: 0.8285\n",
+      "Epoch 90/90\n",
+      "\u001b[1m219/219\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m11s\u001b[0m 30ms/step - accuracy: 0.9845 - loss: 0.0448 - val_accuracy: 0.8704 - val_loss: 0.8400\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8669 - loss: 0.8268\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 7ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9922 - loss: 0.0268\n",
+      "19.6852334856987\n",
+      "9.946308040618897\n",
+      "0.08062992493311565\n"
+     ]
+    }
+   ],
+   "source": [
+    "# read the original dataset\n",
+    "df = pd.read_csv(\"/kaggle/input/urbansound8k/UrbanSound8K.csv\")\n",
+    "\n",
+    "# no augmentation, base model\n",
+    "feature, label, start, end = parser(df, noise_factor=0, crop_factor=0, shift_factor=0, pitch_factor=0, speed_rate=1, decimal = True, aug = False)\n",
+    "X_train, X_test, Y_train, Y_test = prepare_data(feature, label)\n",
+    "\n",
+    "model_noaug, train_time_noaug = train_model(train = True, model_name = \"Original_Model\", X_test = X_test, X_train = X_train, Y_test = Y_test, Y_train = Y_train, epochs = 90)\n",
+    "train_result_noaug, test_result_noaug, eval_time_noaug = train_test_accuracy(model_noaug, X_train, X_test, Y_train, Y_test)\n",
+    "time_elapsed_no_aug = (end-start)/60\n",
+    "\n",
+    "print(time_elapsed_no_aug)\n",
+    "print(train_time_noaug)\n",
+    "print(eval_time_noaug)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "4d94c85c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:02.617432Z",
+     "iopub.status.busy": "2024-09-06T06:14:02.616230Z",
+     "iopub.status.idle": "2024-09-06T06:14:02.624718Z",
+     "shell.execute_reply": "2024-09-06T06:14:02.623102Z"
+    },
+    "papermill": {
+     "duration": 0.834306,
+     "end_time": "2024-09-06T06:14:02.627747",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:01.793441",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0.870361864566803\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(test_result_noaug)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "7ee7aad3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:04.385650Z",
+     "iopub.status.busy": "2024-09-06T06:14:04.385112Z",
+     "iopub.status.idle": "2024-09-06T06:14:04.392194Z",
+     "shell.execute_reply": "2024-09-06T06:14:04.390876Z"
+    },
+    "papermill": {
+     "duration": 0.953589,
+     "end_time": "2024-09-06T06:14:04.394899",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:03.441310",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # noise testing for debugging purposes // successful\n",
+    "# # time stretch testing for debugging purposes, slowed down version // unsuccessful partially\n",
+    "# # sample = [noise_factor, shift_factor, pitch_factor, speed_factor] below\n",
+    "# noise_control_list = [[1,1,0,0,0,1], [1,3,0,0,0,1], [1,5,0,0,0,1], [1,10,0,0,0,1], [1,15,0,0,0,1]]\n",
+    "\n",
+    "# for sample in noise_control_list:\n",
+    "    \n",
+    "#     time_elapsed = time.time()\n",
+    "#     # separating the data into features and labels for further operation\n",
+    "#     feature, label, start, end = parser(df, noise_factor=sample[0], snr_dbs=sample[1], crop_factor=sample[2], shift_factor=sample[3], pitch_factor=sample[4], speed_rate=sample[5], decimal = True, aug = True)\n",
+    "\n",
+    "#     # preparation of the train and test data\n",
+    "#     X_train, X_test, Y_train, Y_test = prepare_data(feature, label)\n",
+    "\n",
+    "#     # calling the existing model trained without any augmentation method utilized\n",
+    "#     model = train_model(train = False, model_name = \"Original_Model.keras\")\n",
+    "\n",
+    "#     # accuracy attainment\n",
+    "#     train_result, test_result = train_test_accuracy(model, X_train, X_test, Y_train, Y_test)\n",
+    "\n",
+    "\n",
+    "#     time_elapsed = (time.time()-time_elapsed)/60\n",
+    "    \n",
+    "#     print(time_elapsed)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "c1a7174e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:06.067884Z",
+     "iopub.status.busy": "2024-09-06T06:14:06.066480Z",
+     "iopub.status.idle": "2024-09-06T06:14:06.073808Z",
+     "shell.execute_reply": "2024-09-06T06:14:06.072475Z"
+    },
+    "papermill": {
+     "duration": 0.823429,
+     "end_time": "2024-09-06T06:14:06.076545",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:05.253116",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # noise testing for debugging purposes // successful\n",
+    "# # time stretch testing for debugging purposes, slowed down version // unsuccessful partially\n",
+    "# # sample = [noise_factor, shift_factor, pitch_factor, speed_factor] below\n",
+    "# data_crop_control_list = [[0,1,0.05,0,0,1], [0,1,0.1,0,0,1], [0,1,0.15,0,0,1], [0,1,0.2,0,0,1], [0,1,0.3,0,0,1]]\n",
+    "\n",
+    "# for sample in data_crop_control_list:\n",
+    "    \n",
+    "#     time_elapsed = time.time()\n",
+    "#     # separating the data into features and labels for further operation\n",
+    "#     feature, label, start, end = parser(df, noise_factor=sample[0], snr_dbs=sample[1], crop_factor=sample[2], shift_factor=sample[3], pitch_factor=sample[4], speed_rate=sample[5], decimal = True, aug = True)\n",
+    "\n",
+    "#     # preparation of the train and test data\n",
+    "#     X_train, X_test, Y_train, Y_test = prepare_data(feature, label)\n",
+    "\n",
+    "#     # calling the existing model trained without any augmentation method utilized\n",
+    "#     model = train_model(train = False, model_name = \"Original_Model.keras\")\n",
+    "\n",
+    "#     # accuracy attainment\n",
+    "#     train_result, test_result = train_test_accuracy(model, X_train, X_test, Y_train, Y_test)\n",
+    "\n",
+    "\n",
+    "#     time_elapsed = (time.time()-time_elapsed)/60\n",
+    "    \n",
+    "#     print(time_elapsed)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "807474a2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:07.745451Z",
+     "iopub.status.busy": "2024-09-06T06:14:07.744997Z",
+     "iopub.status.idle": "2024-09-06T06:14:07.751399Z",
+     "shell.execute_reply": "2024-09-06T06:14:07.750177Z"
+    },
+    "papermill": {
+     "duration": 0.804906,
+     "end_time": "2024-09-06T06:14:07.754159",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:06.949253",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # the control of the accuracy for the addition of the shifted data\n",
+    "# reflection_control_list = [[0,1,0,0,0,1,0.05], [0,1,0,0,0,1,0.1], [0,1,0,0,0,1,0.15], [0,1,0,0,0,1,0.2], [0,1,0,0,0,1,0.25]]\n",
+    "\n",
+    "# for sample in reflection_control_list:\n",
+    "    \n",
+    "#     time_elapsed = time.time()\n",
+    "#     # separating the data into features and labels for further operation\n",
+    "#     feature, label, start, end = parser(df, noise_factor=sample[0], snr_dbs=sample[1], crop_factor=sample[2], shift_factor=sample[3], pitch_factor=sample[4], speed_rate=sample[5], added_shift_factor = sample[6], decimal = True, aug = True)\n",
+    "\n",
+    "#     # preparation of the train and test data\n",
+    "#     X_train, X_test, Y_train, Y_test = prepare_data(feature, label)\n",
+    "\n",
+    "#     # calling the existing model trained without any augmentation method utilized\n",
+    "#     model = train_model(train = False, model_name = \"Original_Model.keras\")\n",
+    "\n",
+    "#     # accuracy attainment\n",
+    "#     train_result, test_result = train_test_accuracy(model, X_train, X_test, Y_train, Y_test)\n",
+    "\n",
+    "#     time_elapsed = (time.time()-time_elapsed)/60\n",
+    "    \n",
+    "#     print(time_elapsed)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "5f7e19d2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:09.370669Z",
+     "iopub.status.busy": "2024-09-06T06:14:09.369044Z",
+     "iopub.status.idle": "2024-09-06T06:14:09.376583Z",
+     "shell.execute_reply": "2024-09-06T06:14:09.375101Z"
+    },
+    "papermill": {
+     "duration": 0.825488,
+     "end_time": "2024-09-06T06:14:09.379872",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:08.554384",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # crop augmentation through the extended dataset\n",
+    "# feature, label, start, end = parser(df, noise_factor=0, crop_factor=0.05, snr_dbs=1, shift_factor=0, pitch_factor=0, speed_rate=1, decimal = True, aug = True)\n",
+    "# X_train_crop1, X_test_crop1, Y_train_crop1, Y_test_crop1 = prepare_data(feature, label)\n",
+    "\n",
+    "# #extension for the training, p.s. validation should stay the same as it was in the no augmentation case for comparison\n",
+    "# X_train1 = np.concatenate((X_train, X_train_crop1), axis=0)\n",
+    "# Y_train1 = np.concatenate((Y_train, Y_train_crop1), axis=0)\n",
+    "\n",
+    "# model_crop1, train_time_crop1 = train_model(train = True, model_name = \"Model_Crop1\", X_test = X_test, X_train = X_train1, Y_test = Y_test, Y_train = Y_train1, epochs = 90)\n",
+    "# train_result_crop1, test_result_crop1, eval_time_crop1 = train_test_accuracy(model_crop1, X_train1, X_test, Y_train1, Y_test)\n",
+    "# time_elapsed_crop1_aug = (end-start)/60\n",
+    "\n",
+    "# print(time_elapsed_crop1_aug)\n",
+    "# print(train_time_crop1)\n",
+    "# print(eval_time_crop1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "e1153a4e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:11.050451Z",
+     "iopub.status.busy": "2024-09-06T06:14:11.049113Z",
+     "iopub.status.idle": "2024-09-06T06:14:11.056230Z",
+     "shell.execute_reply": "2024-09-06T06:14:11.054673Z"
+    },
+    "papermill": {
+     "duration": 0.807244,
+     "end_time": "2024-09-06T06:14:11.059344",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:10.252100",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # crop augmentation through the extended dataset\n",
+    "# feature, label, start, end = parser(df, noise_factor=0, crop_factor=0.1, snr_dbs=1, shift_factor=0, pitch_factor=0, speed_rate=1, decimal = True, aug = True)\n",
+    "# X_train_crop, X_test_crop, Y_train_crop, Y_test_crop = prepare_data(feature, label)\n",
+    "\n",
+    "# #extension for the training, p.s. validation should stay the same as it was in the no augmentation case for comparison\n",
+    "# X_train2 = np.concatenate((X_train, X_train_crop), axis=0)\n",
+    "# Y_train2 = np.concatenate((Y_train, Y_train_crop), axis=0)\n",
+    "\n",
+    "# model_crop, train_time_crop = train_model(train = True, model_name = \"Model_Crop\", X_test = X_test, X_train = X_train2, Y_test = Y_test, Y_train = Y_train2, epochs = 90)\n",
+    "# train_result_crop, test_result_crop, eval_time_crop = train_test_accuracy(model_crop, X_train2, X_test, Y_train2, Y_test)\n",
+    "# time_elapsed_crop_aug = (end-start)/60\n",
+    "\n",
+    "# print(time_elapsed_crop_aug)\n",
+    "# print(train_time_crop)\n",
+    "# print(eval_time_crop)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "4d2511ee",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:12.821512Z",
+     "iopub.status.busy": "2024-09-06T06:14:12.820966Z",
+     "iopub.status.idle": "2024-09-06T06:14:12.827391Z",
+     "shell.execute_reply": "2024-09-06T06:14:12.825879Z"
+    },
+    "papermill": {
+     "duration": 0.934235,
+     "end_time": "2024-09-06T06:14:12.830253",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:11.896018",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# [noise_flag, noise_factor, crop_factor, added_shift_factor, shift_factor, pitch_factor, speed_factor] below"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "f8370807",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:14.465958Z",
+     "iopub.status.busy": "2024-09-06T06:14:14.464850Z",
+     "iopub.status.idle": "2024-09-06T06:14:14.471456Z",
+     "shell.execute_reply": "2024-09-06T06:14:14.470070Z"
+    },
+    "papermill": {
+     "duration": 0.823439,
+     "end_time": "2024-09-06T06:14:14.474227",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:13.650788",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # reflectance augmentation through the extended dataset\n",
+    "# feature, label, start, end = parser(df, noise_factor=0, added_shift_factor=0.05, snr_dbs=1, shift_factor=0, pitch_factor=0, speed_rate=1, decimal = True, aug = True)\n",
+    "# X_train_refl, X_test_refl, Y_train_refl, Y_test_refl = prepare_data(feature, label)\n",
+    "\n",
+    "# #extension for the training, p.s. validation should stay the same as it was in the no augmentation case for comparison\n",
+    "# X_train3 = np.concatenate((X_train, X_train_refl), axis=0)\n",
+    "# Y_train3 = np.concatenate((Y_train, Y_train_refl), axis=0)\n",
+    "\n",
+    "# model_refl, train_time_refl = train_model(train = True, model_name = \"Model_Refl1\", X_test = X_test, X_train = X_train3, Y_test = Y_test, Y_train = Y_train3, epochs = 90)\n",
+    "# train_result_refl, test_result_refl, eval_time_refl = train_test_accuracy(model_refl, X_train3, X_test, Y_train3, Y_test)\n",
+    "# time_elapsed_refl_aug = (end-start)/60\n",
+    "\n",
+    "# print(time_elapsed_refl_aug)\n",
+    "# print(train_time_refl)\n",
+    "# print(eval_time_refl)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "226ee057",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:16.166542Z",
+     "iopub.status.busy": "2024-09-06T06:14:16.166030Z",
+     "iopub.status.idle": "2024-09-06T06:14:16.173041Z",
+     "shell.execute_reply": "2024-09-06T06:14:16.171571Z"
+    },
+    "papermill": {
+     "duration": 0.818584,
+     "end_time": "2024-09-06T06:14:16.176351",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:15.357767",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # reflectance augmentation through the extended dataset\n",
+    "# feature, label, start, end = parser(df, noise_factor=0, added_shift_factor=0.1, snr_dbs=1, shift_factor=0, pitch_factor=0, speed_rate=1, decimal = True, aug = True)\n",
+    "# X_train_refl2, X_test_refl2, Y_train_refl2, Y_test_refl2 = prepare_data(feature, label)\n",
+    "\n",
+    "# #extension for the training, p.s. validation should stay the same as it was in the no augmentation case for comparison\n",
+    "# X_train4 = np.concatenate((X_train, X_train_refl2), axis=0)\n",
+    "# Y_train4 = np.concatenate((Y_train, Y_train_refl2), axis=0)\n",
+    "\n",
+    "# model_refl2, train_time_refl2 = train_model(train = True, model_name = \"Model_Refl2\", X_test = X_test, X_train = X_train4, Y_test = Y_test, Y_train = Y_train4, epochs = 90)\n",
+    "# train_result_refl2, test_result_refl2, eval_time_refl2 = train_test_accuracy(model_refl2, X_train4, X_test, Y_train4, Y_test)\n",
+    "# time_elapsed_refl2_aug = (end-start)/60\n",
+    "\n",
+    "# print(time_elapsed_refl2_aug)\n",
+    "# print(train_time_refl2)\n",
+    "# print(eval_time_refl2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "b7fbae1c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:17.877418Z",
+     "iopub.status.busy": "2024-09-06T06:14:17.876790Z",
+     "iopub.status.idle": "2024-09-06T06:14:17.883888Z",
+     "shell.execute_reply": "2024-09-06T06:14:17.882436Z"
+    },
+    "papermill": {
+     "duration": 0.904284,
+     "end_time": "2024-09-06T06:14:17.886916",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:16.982632",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # pitch augmentation through the extended dataset\n",
+    "# feature, label, start, end = parser(df, noise_factor=0, snr_dbs=1, shift_factor=0, pitch_factor=0.5, speed_rate=1, decimal = True, aug = True)\n",
+    "# X_train_pitched3, X_test_pitched3, Y_train_pitched3, Y_test_pitched3 = prepare_data(feature, label)\n",
+    "\n",
+    "# #extension for the training, p.s. validation should stay the same as it was in the no augmentation case for comparison\n",
+    "# X_train5 = np.concatenate((X_train, X_train_pitched3), axis=0)\n",
+    "# Y_train5 = np.concatenate((Y_train, Y_train_pitched3), axis=0)\n",
+    "\n",
+    "# model_pitch3, train_time_pitch3 = train_model(train = True, model_name = \"Model_Pitch\", X_test = X_test, X_train = X_train5, Y_test = Y_test, Y_train = Y_train5, epochs = 90)\n",
+    "# train_result_pitch3, test_result_pitch3, eval_time_pitch3 = train_test_accuracy(model_pitch3, X_train5, X_test, Y_train5, Y_test)\n",
+    "# time_elapsed_pitch_aug3 = (end-start)/60\n",
+    "\n",
+    "# print(time_elapsed_pitch_aug2)\n",
+    "# print(train_time_pitch2)\n",
+    "# print(eval_time_pitch2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "2b8bc51b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T06:14:19.548906Z",
+     "iopub.status.busy": "2024-09-06T06:14:19.548373Z",
+     "iopub.status.idle": "2024-09-06T12:25:29.669383Z",
+     "shell.execute_reply": "2024-09-06T12:25:29.665625Z"
+    },
+    "papermill": {
+     "duration": 22270.989127,
+     "end_time": "2024-09-06T12:25:29.673796",
+     "exception": false,
+     "start_time": "2024-09-06T06:14:18.684669",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 10ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.5146 - loss: 3.5315\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.5867 - loss: 2.4808\n",
+      "19.252917456626893\n",
+      "0.08679677248001098\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 11ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.6991 - loss: 1.9863\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.8352 - loss: 0.8539\n",
+      "18.47168670097987\n",
+      "0.10365156332651775\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 10ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8145 - loss: 1.1701\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9467 - loss: 0.1965\n",
+      "18.369856945673625\n",
+      "0.0878654400507609\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 10ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8580 - loss: 0.9135\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9876 - loss: 0.0527\n",
+      "18.513120325406394\n",
+      "0.10008163054784139\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 9ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8638 - loss: 0.8392\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9910 - loss: 0.0298\n",
+      "18.469334852695464\n",
+      "0.09062128861745199\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 9ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8637 - loss: 0.8270\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9922 - loss: 0.0268\n",
+      "18.542714250087737\n",
+      "0.08779364029566447\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 10ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8643 - loss: 0.8236\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 9ms/step - accuracy: 0.9922 - loss: 0.0269\n",
+      "18.581411810715995\n",
+      "0.09382905960083007\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 12ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8656 - loss: 0.8266\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9922 - loss: 0.0268\n",
+      "18.56892127195994\n",
+      "0.09665096600850423\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1323\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1103\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1523\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 9ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8252 - loss: 0.9722\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9572 - loss: 0.1559\n",
+      "27.636416947841646\n",
+      "0.08836882511774699\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 10ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8163 - loss: 1.0087\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9496 - loss: 0.1684\n",
+      "27.63834734757741\n",
+      "0.08791677157084148\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 10ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.7800 - loss: 1.2089\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9018 - loss: 0.3746\n",
+      "27.790902662277222\n",
+      "0.09240394035975139\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 9ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 9ms/step - accuracy: 0.7236 - loss: 1.6564\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.8205 - loss: 0.9581\n",
+      "27.844568765163423\n",
+      "0.10494957367579143\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 10ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.6437 - loss: 2.3777\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.6934 - loss: 1.9025\n",
+      "27.988281949361166\n",
+      "0.09913003444671631\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1470\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1226\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1692\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 9ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8274 - loss: 1.0704\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 9ms/step - accuracy: 0.9416 - loss: 0.1830\n",
+      "27.853809189796447\n",
+      "0.09270164569218954\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=2035\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1260\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1050\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1450\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 11ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8239 - loss: 1.0452\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9537 - loss: 0.1476\n",
+      "27.103281994660694\n",
+      "0.08979214032491048\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1943\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=2005\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1203\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1003\n",
+      "  warnings.warn(\n",
+      "/opt/conda/lib/python3.10/site-packages/librosa/core/spectrum.py:266: UserWarning: n_fft=2048 is too large for input signal of length=1385\n",
+      "  warnings.warn(\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 9ms/step\n",
+      "\u001b[1m69/69\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 8ms/step - accuracy: 0.8296 - loss: 1.0040\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step\n",
+      "\u001b[1m205/205\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 8ms/step - accuracy: 0.9459 - loss: 0.1783\n",
+      "26.920053613185882\n",
+      "0.0878411889076233\n"
+     ]
+    }
+   ],
+   "source": [
+    "# sample = [noise_flag, noise_factor, shift_factor, pitch_factor, speed_factor] belowss\n",
+    "noise_control_list = [[1,0,0,0,1], [1,5,0,0,1], [1,10,0,0,1], [1,15,0,0,1], [1,20,0,0,1]] \n",
+    "shift_control_list = [[0,1,0.05,0,1], [0,1,0.15,0,1], [0,1,0.35,0,1]]                                                                                                \n",
+    "pitch_control_list = [[0,1,0,0.05,1], [0,1,0,0.1,1], [0,1,0,0.25,1], [0,1,0,0.5,1], [0,1,0,1,1]] \n",
+    "time_stretch_control_list = [[0,1,0,0,.90], [0,1,0,0,1.05], [0,1,0,0,1.10]]\n",
+    "\n",
+    "\n",
+    "sample_list = [noise_control_list, shift_control_list, pitch_control_list, time_stretch_control_list]\n",
+    "\n",
+    "train_acc, valid_acc, dataprep_time_listed, eval_time_listed = [],[],[],[]\n",
+    "\n",
+    "for control in sample_list:\n",
+    "    for sample in control:\n",
+    "\n",
+    "        # separating the data into features and labels for further operation\n",
+    "        feature, label, start, end = parser(df, noise_factor=sample[0], snr_dbs=sample[1], shift_factor=sample[2], pitch_factor=sample[3], speed_rate=sample[4], decimal = True, aug = True)\n",
+    "\n",
+    "        # preparation of the train and test data\n",
+    "        X_train, X_test, Y_train, Y_test = prepare_data(feature, label)\n",
+    "\n",
+    "        # calling the existing model trained without any augmentation method utilized\n",
+    "        model = train_model(train = False, model_name = \"Original_Model.keras\")\n",
+    "\n",
+    "        # accuracy attainment\n",
+    "        train_result, test_result, eval_time = train_test_accuracy(model, X_train, X_test, Y_train, Y_test)\n",
+    "\n",
+    "        time_elapsed = (end-start)/60\n",
+    "        print(time_elapsed)\n",
+    "        print(eval_time)\n",
+    "\n",
+    "        train_acc.append(train_result)\n",
+    "        valid_acc.append(test_result)\n",
+    "        dataprep_time_listed.append(time_elapsed)\n",
+    "        eval_time_listed.append(eval_time)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "267739a3",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T12:25:31.603639Z",
+     "iopub.status.busy": "2024-09-06T12:25:31.602792Z",
+     "iopub.status.idle": "2024-09-06T12:25:31.613067Z",
+     "shell.execute_reply": "2024-09-06T12:25:31.611887Z"
+    },
+    "papermill": {
+     "duration": 1.018858,
+     "end_time": "2024-09-06T12:25:31.616217",
+     "exception": false,
+     "start_time": "2024-09-06T12:25:30.597359",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# # alternative data augmentation methods, inspired by more complex methods and possible scenarios in real life\n",
+    "# # sample = [noise_flag, noise_factor, crop_factor, added_shift_factor, shift_factor, pitch_factor, speed_factor] below\n",
+    "# data_crop_control_list = [[0,1,0,0,0,0,1], [0,1,0.05,0,0,0,1], [0,1,0.1,0,0,0,1], [0,1,0.2,0,0,0,1], [0,1,0.5,0,0,0,1]]\n",
+    "# reflect_control_list = [[0,1,0,0.05,0,0,1], [0,1,0,0.1,0,0,1], [0,1,0,0.2,0,0,1]]\n",
+    "\n",
+    "# sample_list = [data_crop_control_list, reflect_control_list]\n",
+    "# alt_train_acc, alt_valid_acc, alt_dataprep_time_listed, alt_eval_time_listed = [],[],[],[]\n",
+    "\n",
+    "# for control in sample_list:\n",
+    "#     for sample in control:\n",
+    "\n",
+    "#         # separating the data into features and labels for further operation\n",
+    "#         feature, label, start, end = parser(df, noise_factor=sample[0], snr_dbs=sample[1], crop_factor=sample[2], added_shift_factor=sample[3], shift_factor=sample[4], pitch_factor=sample[5], speed_rate=sample[6], decimal = True, aug = True)\n",
+    "\n",
+    "#         # preparation of the train and test data\n",
+    "#         X_train, X_test, Y_train, Y_test = prepare_data(feature, label)\n",
+    "\n",
+    "#         # calling the existing model trained without any augmentation method utilized\n",
+    "#         model = train_model(train = False, model_name = \"Original_Model.keras\")\n",
+    "\n",
+    "#         # accuracy attainment\n",
+    "#         train_result, test_result, eval_time = train_test_accuracy(model, X_train, X_test, Y_train, Y_test)\n",
+    "\n",
+    "#         time_elapsed = (end-start)/60\n",
+    "        \n",
+    "#         print(time_elapsed)\n",
+    "#         print(eval_time)\n",
+    "\n",
+    "#         alt_train_acc.append(train_result)\n",
+    "#         alt_valid_acc.append(test_result)\n",
+    "#         alt_dataprep_time_listed.append(time_elapsed)\n",
+    "#         alt_eval_time_listed.append(eval_time)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "06eb1f7a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T12:25:33.483376Z",
+     "iopub.status.busy": "2024-09-06T12:25:33.481950Z",
+     "iopub.status.idle": "2024-09-06T12:25:33.489329Z",
+     "shell.execute_reply": "2024-09-06T12:25:33.487834Z"
+    },
+    "papermill": {
+     "duration": 0.950671,
+     "end_time": "2024-09-06T12:25:33.492129",
+     "exception": false,
+     "start_time": "2024-09-06T12:25:32.541458",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# alt_test_results_dict = {\n",
+    "#     'Samples':['NoAugmentation', \n",
+    "#                 'Random_Crop, 5%', 'Random_Crop, 10%', 'Random_Crop, 20%', 'Random_Crop, 50%',\n",
+    "#                 'Reflection, 5%', 'Reflection, 10%', 'Reflection, 20%', 'Reflection, 50%'],\n",
+    "#     'Training Accuracy': [train_result_noaug] + alt_train_acc,\n",
+    "#     'Validation Accuracy': [test_result_noaug] + alt_valid_acc,\n",
+    "#     'Data Preparation Time': [time_elapsed_no_aug] + alt_dataprep_time_listed,\n",
+    "#     'Evaluation Time': [eval_time_noaug] + alt_eval_time_listed\n",
+    "# }\n",
+    "# alt_test_results = pd.DataFrame(alt_test_results_dict)\n",
+    "# alt_test_results.set_index(\"Samples\")\n",
+    "\n",
+    "# print(alt_test_results)\n",
+    "# alt_test_results.to_csv(\"Alternative_Augmentation_Results.csv\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "f40f4c36",
+   "metadata": {
+    "collapsed": true,
+    "execution": {
+     "iopub.execute_input": "2024-09-06T12:25:35.526084Z",
+     "iopub.status.busy": "2024-09-06T12:25:35.525080Z",
+     "iopub.status.idle": "2024-09-06T12:25:35.576922Z",
+     "shell.execute_reply": "2024-09-06T12:25:35.575091Z"
+    },
+    "jupyter": {
+     "outputs_hidden": true
+    },
+    "papermill": {
+     "duration": 0.999925,
+     "end_time": "2024-09-06T12:25:35.580140",
+     "exception": false,
+     "start_time": "2024-09-06T12:25:34.580215",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "                        Samples  Validation Accuracy  Training Accuracy  \\\n",
+      "0                NoAugmentation             0.870362           0.988701   \n",
+      "1                Noise, SNR=0dB             0.500687           0.580089   \n",
+      "2                Noise, SNR=5dB             0.703161           0.827455   \n",
+      "3               Noise, SNR=10dB             0.816308           0.942892   \n",
+      "4               Noise, SNR=15dB             0.858910           0.983509   \n",
+      "5               Noise, SNR=20dB             0.868071           0.988243   \n",
+      "6                   Shifted, 5%             0.868988           0.988701   \n",
+      "7                  Shifted, 15%             0.869904           0.988701   \n",
+      "8                  Shifted, 35%             0.869904           0.988701   \n",
+      "9   Pitch Changed, 0.05semiNote             0.828218           0.956024   \n",
+      "10   Pitch Changed, 0.1semiNote             0.823637           0.949611   \n",
+      "11  Pitch Changed, 0.25semiNote             0.781035           0.896625   \n",
+      "12   Pitch Changed, 0.5semiNote             0.721484           0.815697   \n",
+      "13     Pitch Changed, 1semiNote             0.644526           0.694457   \n",
+      "14         Time-Stretched, -10%             0.822721           0.939991   \n",
+      "15          Time-Stretched, +5%             0.827760           0.952665   \n",
+      "16         Time-Stretched, +10%             0.828676           0.944724   \n",
+      "\n",
+      "    Data Creation Time  Evaluation Time  \n",
+      "0            19.685233         0.080630  \n",
+      "1            19.252917         0.086797  \n",
+      "2            18.471687         0.103652  \n",
+      "3            18.369857         0.087865  \n",
+      "4            18.513120         0.100082  \n",
+      "5            18.469335         0.090621  \n",
+      "6            18.542714         0.087794  \n",
+      "7            18.581412         0.093829  \n",
+      "8            18.568921         0.096651  \n",
+      "9            27.636417         0.088369  \n",
+      "10           27.638347         0.087917  \n",
+      "11           27.790903         0.092404  \n",
+      "12           27.844569         0.104950  \n",
+      "13           27.988282         0.099130  \n",
+      "14           27.853809         0.092702  \n",
+      "15           27.103282         0.089792  \n",
+      "16           26.920054         0.087841  \n"
+     ]
+    }
+   ],
+   "source": [
+    "test_results_dict = {\n",
+    "    'Samples':['NoAugmentation', \n",
+    "                'Noise, SNR=0dB', 'Noise, SNR=5dB', 'Noise, SNR=10dB', 'Noise, SNR=15dB', 'Noise, SNR=20dB',\n",
+    "                'Shifted, 5%', 'Shifted, 15%', 'Shifted, 35%',\n",
+    "                'Pitch Changed, 0.05semiNote',\n",
+    "                'Pitch Changed, 0.1semiNote', 'Pitch Changed, 0.25semiNote', 'Pitch Changed, 0.5semiNote', 'Pitch Changed, 1semiNote',\n",
+    "                'Time-Stretched, -10%', 'Time-Stretched, +5%', 'Time-Stretched, +10%'],\n",
+    "    'Validation Accuracy': [test_result_noaug] + valid_acc,\n",
+    "    'Training Accuracy': [train_result_noaug] + train_acc,\n",
+    "    'Data Creation Time': [time_elapsed_no_aug] + dataprep_time_listed,\n",
+    "    'Evaluation Time': [eval_time_noaug] + eval_time_listed\n",
+    "}\n",
+    "test_results = pd.DataFrame(test_results_dict)\n",
+    "test_results.set_index(\"Samples\")\n",
+    "\n",
+    "print(test_results)\n",
+    "test_results.to_csv(\"Efficient_Augmentation_Selection_Results.csv\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "310f5727",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-09-06T12:25:37.501912Z",
+     "iopub.status.busy": "2024-09-06T12:25:37.501228Z",
+     "iopub.status.idle": "2024-09-06T12:25:37.516959Z",
+     "shell.execute_reply": "2024-09-06T12:25:37.515289Z"
+    },
+    "papermill": {
+     "duration": 1.024288,
+     "end_time": "2024-09-06T12:25:37.519943",
+     "exception": false,
+     "start_time": "2024-09-06T12:25:36.495655",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'\\ndef doppler_effect_\\n'"
+      ]
+     },
+     "execution_count": 27,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "\"\"\"\n",
+    "def doppler_effect_\n",
+    "\"\"\"\n",
+    "\n",
+    "#sdfjldsufhluds\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "datasetId": 500970,
+     "sourceId": 928025,
+     "sourceType": "datasetVersion"
+    }
+   ],
+   "dockerImageVersionId": 30761,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.14"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 24126.665868,
+   "end_time": "2024-09-06T12:25:41.847912",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-09-06T05:43:35.182044",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
